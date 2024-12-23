@@ -1,46 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="container">
     <div class="row justify-content-center">
-        {{-- create form --}}
-        <div class="card col-md-10 m-2 p-4">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="">Task Name</label>
-                        <input type="text" class="form-control" id="" name="" placeholder="Task Name">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="">Start Date</label>
-                        <input type="date" class="form-control" id="" name="" placeholder="">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="">End Date</label>
-                        <input type="date" class="form-control" id="" name="" placeholder="">
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-sm btn-success p-2 mt-2"><i class="fa fa-paper-plane"></i> Submit</button>
-                    </div>
-                </div>
-
-
-            </div>
+        {{-- task create button --}}
+        <div class="form-group">
+            <a href="{{ route('tasks.create') }}" class="btn btn-primary"><i class="fa fa-plus"></i> Add Task</a>
         </div>
 
-
-
         {{-- list --}}
-        <div class="col-md-10 m-2 p-2">
+        <div class="col-md-12 m-2 p-2">
+            @if($tasks->isEmpty())
+            <p>No tasks found.</p>
+            @else
             <table class="table table-responsive table-hover table-bordered">
                 <thead>
                     <tr>
@@ -53,19 +26,36 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @foreach($tasks as $task)
                     <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
+                        <td>{{ $task->id }}</td>
+                        <td>{{ $task->task_name }}</td>
+                        <td>{{ $task->start_date }}</td>
+                        <td>{{ $task->end_date }}</td>
                         <td>
-                            <a href="" class="btn btn-sm btn-success" style="border-radius: 50%"><i class="fa fa-edit"></i></a>
-                            <a href="" class="btn btn-sm btn-danger" style="border-radius: 50%;"><i class="fa fa-trash"></i></a>
+                            @if($task->status == 0)
+                            Pending
+                            @elseif($task->status == 1)
+                            In Progress
+                            @elseif($task->status == 2)
+                            Completed
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('tasks.edit', $task->id) }}" class="btn btn-primary btn-sm" style="border-radius: 50%;"><i class="fa fa-edit"></i></a>
+
+                            <form action="{{ route('tasks.destroy', $task->id) }}" method="POST" style="display:inline; border-radius: 50%;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                            </form>
                         </td>
                     </tr>
+                    @endforeach
+
                 </tbody>
             </table>
+            @endif
         </div>
     </div>
 </div>

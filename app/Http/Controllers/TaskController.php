@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Task;
+use Auth;
 
 class TaskController extends Controller
 {
@@ -35,20 +36,20 @@ class TaskController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-{
-    $validated = $request->validate([
-        'task_name' => 'required|string|max:255',
-        'start_date' => 'required|date',
-        'end_date' => 'nullable|date|after_or_equal:start_date',
-    ]);
+    {
+        $validated = $request->validate([
+            'task_name' => 'required|string|max:255',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
 
-    $validated['user_id'] = auth()->id();
-    $validated['status'] = 0;
+        $validated['user_id'] = auth()->id();
+        $validated['status'] = 0;
 
-    $task = Task::create($validated);
+        $tasks = Task::create($validated);
 
-    return redirect()->route('tasks.index')->with('success', 'Task Created Successfully!');
-}
+        return redirect()->route('tasks.index')->with('success', 'Task Created Successfully!');
+    }
 
 
     /**
@@ -117,8 +118,8 @@ class TaskController extends Controller
      */
     public function destroy($id)
     {
-        $task = Task::findOrFail($id);
-        $task->delete();
+        $tasks = Task::findOrFail($id);
+        $tasks->delete();
         return redirect()->route('tasks.index')->with('success', 'Task deleted successfully!');
     }
 }

@@ -1,4 +1,4 @@
-![Alt text]()
+![Alt text](welcome-page.PNG)
 
 
 # Task Management System

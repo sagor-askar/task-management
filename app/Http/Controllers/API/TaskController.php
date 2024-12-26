@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\API\BaseController as BaseController;
 use App\Models\Task;
-use Auth;
+use Validator;
+use App\Http\Resources\TaskResource;
 
-class TaskController extends Controller
+class TaskController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -15,11 +17,8 @@ class TaskController extends Controller
      */
     public function index()
     {
-        $tasks = Task::where('user_id', auth()->id())
-                ->orderBy('status', 'ASC')
-                ->get();
-
-        return view('home', compact('tasks'));
+        $tasks = Task::where('user_id', auth()->id())->get();
+        return $this->sendResponse(TaskResource::collection($tasks), 'Task Info Displayed Successfully!');
     }
 
     /**
@@ -29,7 +28,7 @@ class TaskController extends Controller
      */
     public function create()
     {
-        return view('taskCreate');
+        //
     }
 
     /**
@@ -40,20 +39,24 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
             'task_name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $validated['user_id'] = auth()->id();
-        $validated['status'] = 0;
+        $input['user_id'] = auth()->id();
+        $input['status'] = 0;
 
-        $tasks = Task::create($validated);
+        if($validator->fails()){
+            return $this->sendError('Validation Error.', $validator->errors());
+        }
 
-        return redirect()->route('tasks.index')->with('success', 'Task Created Successfully!');
+        $tasks = Task::create($input);
+        return $this->sendResponse(new TaskResource($tasks), 'Task Created Successfully!');
     }
-
 
     /**
      * Display the specified resource.
@@ -63,7 +66,13 @@ class TaskController extends Controller
      */
     public function show($id)
     {
-        //
+        $tasks = Task::find($id);
+
+        if (is_null($tasks)) {
+            return $this->sendError('Task not found.');
+        }
+
+        return $this->sendResponse(new TaskResource($tasks), 'Task Retrieved Successfully!');
     }
 
     /**
@@ -74,14 +83,7 @@ class TaskController extends Controller
      */
     public function edit($id)
     {
-        $tasks = Task::findOrFail($id);
-
-        // Ensure the task belongs to the authenticated user
-        if ($tasks->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized Action!');
-        }
-
-        return view('taskEdit', compact('tasks'));
+        //
     }
 
     /**
@@ -93,6 +95,7 @@ class TaskController extends Controller
      */
     public function update(Request $request, $id)
     {
+
         $tasks = Task::findOrFail($id);
 
         // Ensure the task belongs to the authenticated user
@@ -109,8 +112,9 @@ class TaskController extends Controller
 
         $tasks->update($validated);
 
-        return redirect()->route('tasks.index')->with('success', 'Task Updated Successfully!');
+        return $this->sendResponse(new TaskResource($tasks), 'Task Updated Successfully.');
     }
+
 
 
     /**
@@ -123,6 +127,6 @@ class TaskController extends Controller
     {
         $tasks = Task::findOrFail($id);
         $tasks->delete();
-        return redirect()->route('tasks.index')->with('success', 'Task deleted successfully!');
+        return $this->sendResponse([], 'Task Deleted Successfully.');
     }
 }
